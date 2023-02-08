@@ -1,0 +1,201 @@
+#DisplayReverseOrderRecursive
+.data 
+	start: .asciiz "\nEnter 1 to continue 0 to exit"
+	list: .asciiz "\n List:"
+
+	enter: .asciiz "\nEnter an integer (-1 to exit)"
+	size: .asciiz "\nSize: "
+	comma: .asciiz " "
+	end: .asciiz "\n----------\n"
+
+.text	
+
+main:
+	la $a0,start
+	li $v0,4
+	syscall
+	
+	li $v0,5
+	syscall
+	
+	beq $v0,0,exitProgram
+
+	la $a0, list
+	li $v0, 4
+	syscall
+	
+	jal createList
+	
+	move $s0, $v0 #Address of the head of the first list
+	
+		
+	move $a0,$s0
+	jal printList
+	
+	move $a0,$s0
+	jal recursivePrint
+	
+	j main
+	
+createList:
+	addi	$sp, $sp, -24
+	sw	$s0, 20($sp)
+	sw	$s1, 16($sp)
+	sw	$s2, 12($sp)
+	sw	$s3, 8($sp)
+	sw	$s4, 4($sp)
+	sw	$ra, 0($sp) 	# Save $ra just in case we may want to call a subprogram
+
+	firstNode:
+	
+	la $a0,enter
+	li $v0,4
+	syscall
+	
+	li $v0,5
+	syscall
+	
+	move $s0, $v0
+	
+	beq $s0,-1,emptyList
+	
+	li	$a0, 8
+	li	$v0, 9
+	syscall
+	
+	move	$s1, $v0	# $s1 points to the first and last node of the linked list.
+	move	$s2, $v0	# $s2 now points to the list head.
+	
+	
+	sw	$s0, 4($s1)	# Store the data value.
+	
+	addNode:
+	la $a0,enter
+	li $v0,4
+	syscall
+	
+	li $v0,5
+	syscall
+	
+	move $s0,$v0
+	
+	beq $s0,-1,allDone
+	li	$a0, 8 		# Remember: Node size is 8 bytes.
+	li	$v0, 9
+	syscall
+
+	sw	$v0, 0($s1)
+	
+	lw $s1,0($s1)	# $s1 now points to the new node.
+		
+	sw 	$s0, 4($s1)
+
+	
+	
+
+	j	addNode
+	
+	allDone:
+	# Make sure that the link field of the last node cotains 0.
+	# The last node is pointed by $s21
+
+	sw	$zero, 0($s1)
+	move	$v0, $s2	# Return head
+	
+	# Restore the register values
+	lw	$ra, 0($sp)
+	lw	$s4, 4($sp)
+	lw	$s3, 8($sp)
+	lw	$s2, 12($sp)
+	lw	$s1, 16($sp)
+	lw	$s0, 20($sp)
+	addi	$sp, $sp, 24
+	
+	jr	$ra
+	
+	emptyList:
+	
+	move $v0,$zero
+	
+	lw	$ra, 0($sp)
+	lw	$s4, 4($sp)
+	lw	$s3, 8($sp)
+	lw	$s2, 12($sp)
+	lw	$s1, 16($sp)
+	lw	$s0, 20($sp)
+	addi	$sp, $sp, 24
+	
+	jr $ra
+		
+printList:
+	sw	$s0, -4($sp) #address of the head of the linked list
+	sw	$s1, -8($sp) #curr data
+	sw 	$s2, -12($sp) #Size
+	move $s0,$a0
+	li $s2,0
+	
+	next: 
+		beq $s0,$zero,finishPrint ##if list is empty
+		lw $s1,4($s0)
+		
+		li $v0,1
+		move $a0,$s1
+		syscall
+		
+		addi $s2,$s2,1
+		
+		lw $s0,0($s0)
+		beq $s0,$zero,finishPrint
+		
+		li $v0,4
+		la $a0,comma
+		syscall
+    		j next
+		
+	finishPrint:
+		
+		la $a0,end
+		li $v0,4
+		syscall
+		
+		lw	$s0, -4($sp) #address of the head of the linked list
+		lw	$s1, -8($sp) #curr data
+		jr $ra
+
+recursivePrint:
+	addi $sp,$sp,-12
+	sw $ra, 0($sp)
+	sw $s0, 4($sp)
+	sw $s1, 8($sp)
+	
+	move $s0,$a0
+	
+	beq $s0,0,return
+	
+	lw $s1,4($s0)
+	lw $s0, 0($s0)
+	
+	move $a0,$s0
+	jal recursivePrint
+	
+	li $v0,1
+	move $a0,$s1
+	syscall
+	
+	li $v0,4
+	la $a0,comma
+	syscall
+	
+
+	return:
+
+		lw $ra, 0($sp)
+		lw $s0, 4($sp)
+		lw $s1, 8($sp)	
+		addi $sp,$sp,12
+
+		jr $ra
+
+exitProgram:
+	li $v0,10
+	syscall

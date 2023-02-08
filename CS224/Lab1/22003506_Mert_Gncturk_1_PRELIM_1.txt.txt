@@ -1,0 +1,190 @@
+CS224
+Lab No. 1
+Section No. 1
+Your Full Name Mahmmut Mert Gençtürk
+Bilkent ID 22003506
+Date 02.10.22
+###############################################
+.data
+	firstMessageString: .asciiz "Please enter the size of the array"
+	secondMessageString: .asciiz " \n enter the next element"
+	NL: .asciiz "\n"
+	Space: .asciiz " "
+	comma: .asciiz ", "
+	
+	arr: .space 80
+.text
+la $a0, firstMessageString #Address of the first prompt
+li $v0, 4 #System code for printing string : 4
+syscall
+
+li $v0, 5 #System code for getting integer input
+syscall
+
+move $s0, $v0 #s0 stores the size of the array
+
+la $t1, arr #Starting address of allocated space
+
+
+li $t0, 0 #pointer for loop
+#loop for taking array elements as inputs
+while: beq $s0, $t0, display
+
+	la $a0, secondMessageString #Address of the second prompt
+	li $v0, 4 #System code for printing string : 4
+	syscall
+	
+	li $a0, 0 #Taking the int input
+	li $v0, 5
+	syscall
+	
+	move $t2, $v0		#t2 contains the input
+	sw $t2, ($t1)	#Storing the input to the memory
+	addi $t1, $t1 ,4	#Incresing address pointer by 4	
+	addi $t0, $t0,1		#Increasing loop counter by 1
+	j while
+	
+#Displaying the array
+display:
+	li $t2, 0
+	li $t0, 0
+	move $a0, $zero
+	la $t1, arr #Starting address of allocated space
+	
+	while_2:beq $s0, $t0, revert
+		li $v0, 1 #Printing int
+		lw $a0, ($t1)
+		syscall
+		li $v0, 4 
+		la $a0, Space	
+		syscall
+		addi $t1, $t1 ,4
+		addi $t0, $t0, 1
+		j while_2
+	
+	
+revert:
+	la $t1, arr #address of start
+
+	la, $t2, arr #address of end
+	
+	li $t3, 0 #tmp
+	
+	sll $s1, $s0, 2 #size x 4
+	
+	add $t2, $t2, $s1
+	addi $t2, $t2, -4
+	
+	
+	while_3: bge $t1, $t2, display_2
+		lw $t3, ($t1)
+		lw $t4, ($t2)
+		sw $t3, ($t2)
+		sw $t4, ($t1)
+		
+		addi $t1, $t1, 4
+		addi $t2, $t2, -4
+		j while_3
+
+display_2:
+	li $t2, 0
+	li $t0, 0
+	move $a0, $zero
+	la $t1, arr #Starting address of allocated space
+
+
+	li $v0, 4 
+	la $a0, NL	
+	syscall
+		
+	while_4:beq $s0, $t0, exit
+		li $v0, 1 #Printing int
+		lw $a0, ($t1)
+		syscall
+		li $v0, 4 
+		la $a0, Space	
+		syscall
+		addi $t1, $t1 ,4
+		addi $t0, $t0, 1
+		j while_4
+exit:
+	li $v0, 10
+	syscall	
+########################################################
+	
+.data
+	equation: .asciiz "A= (B / C + D * B - C ) Mod B"
+	B: .asciiz "\nB: "
+	C: .asciiz " \nC: "
+	D: .asciiz "\nD: "
+	fin: .asciiz "\nResult is: "
+	
+.text
+	li $v0, 4
+	la $a0, equation
+	syscall
+	
+	la $a0, B
+	syscall
+	li $v0, 5
+	syscall
+	move $s0, $v0
+	
+	li $v0, 4
+	la $a0, C
+	syscall
+	li $v0, 5
+	syscall
+	move $s1, $v0
+	
+	
+	li $v0, 4
+	la $a0, D
+	syscall
+	li $v0, 5
+	syscall
+	move $s2, $v0
+	
+	division:
+		add $t0, $s0, $zero
+		add $t1, $s1 ,$zero
+		li $t2, 0
+		
+		while: 
+			blt $t0, $t1, multi
+			sub $t0, $t0, $t1
+			addi $t2, $t2,1
+			j while
+	multi:
+		mul $t3, $s2, $s0
+		mfhi $t4
+		j addition
+		
+	addition:
+		add $t2, $t2, $t3
+		j subst
+	subst:
+		sub $t2, $t2, $s1
+		j mod
+	mod:
+		blt $t2, 0, negative
+		while_2: 
+			blt $t2, $s0, result
+			sub $t2, $t2, $s0
+			j while_2
+	negative:
+		add $t2, $t2, $s0
+		j result	
+	result: 
+		li $v0, 4
+		la $a0, fin
+		syscall
+		li $v0, 1
+		move $a0, $t2
+		syscall
+		
+		li $v0, 10
+		syscall
+		
+############################################3
+
